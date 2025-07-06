@@ -16,6 +16,7 @@ const gameOverMsg = gameOverScreen.querySelector("p:not(.final-score)");
 const startScreen = document.getElementById("start-screen");
 const mainGame = document.getElementById("main-game");
 const startBtn = document.getElementById("start-btn");
+const gameWrapper = document.querySelector('.game-wrapper');
 
 const milestoneMessages = [
   { score: 100, message: "You're helping more families!" },
@@ -27,6 +28,7 @@ const milestoneMessages = [
 startBtn.addEventListener("click", () => {
   startScreen.style.display = "none";
   mainGame.style.display = "";
+  gameWrapper.classList.remove('centered-screen');
   startGame();
 });
 
@@ -48,6 +50,7 @@ function startGame() {
     }
   }, 1000);
   dropInterval = setInterval(spawnDrop, 400); // Change 800 to 500 for faster drops
+  gameWrapper.classList.remove('centered-screen');
 }
 
 function resetGame() {
@@ -77,7 +80,11 @@ function spawnDrop() {
     drop.dataset.bad = "true";
   }
 
-  drop.style.left = Math.random() * 260 + "px";
+  // Responsive spawn: wider range on large screens
+  let containerWidth = gameContainer.offsetWidth;
+  let dropWidth = window.matchMedia('(min-width: 700px)').matches ? 64 : 40;
+  let maxLeft = containerWidth - dropWidth;
+  drop.style.left = Math.random() * maxLeft + "px";
 
   drop.addEventListener("click", (e) => {
     // Show correct feedback above the drop
@@ -180,6 +187,7 @@ function endGame() {
     }
   }
   gameOverScreen.style.display = "flex";
+  gameWrapper.classList.add('centered-screen');
 }
 
 // Restart button handler
@@ -189,5 +197,11 @@ restartBtn.addEventListener("click", () => {
   gameContainer.style.display = "";
   document.querySelector(".lives").style.display = "";
   document.querySelector(".score-panel").style.display = "";
+  gameWrapper.classList.remove('centered-screen');
   startGame();
 });
+
+// On initial load, center the start screen
+if (startScreen.style.display !== "none") {
+  gameWrapper.classList.add('centered-screen');
+}

@@ -3,11 +3,13 @@ body {
   font-family: Arial, sans-serif;
   background: #f0f8ff;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
   flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  justify-content: center;
+  overflow: hidden; /* Prevent scrolling */
 }
+
 
 .game-wrapper {
   text-align: center;
@@ -133,6 +135,11 @@ body {
   color: #333;
 }
 
+
+#main-game {
+  margin-top: 60px;
+}
+
 .start-screen {
   position: relative;
   width: 300px;
@@ -230,4 +237,121 @@ body,
 .game-over-screen button,
 .game-over-screen p {
   user-select: none;
+}
+
+/* Responsive: Scale up game on laptop/desktop, keep 300px on mobile */
+@media (min-width: 700px) {
+
+  /* Main containers */
+  #main-game,
+  #start-screen,
+  .game-over-screen {
+    width: 640px;
+    min-width: 640px;
+    max-width: 640px;
+    height: 400px;
+    min-height: 400px;
+    max-height: 400px;
+    /* Prevent overflow */
+    box-sizing: border-box;
+  }
+
+  #game-container {
+    width: 640px;
+    height: 400px;
+  }
+
+  .score-panel,
+  #milestone-container {
+    width: 640px;
+  }
+
+  /* Title and logo */
+  .game-title {
+    font-size: 32px;
+    top: 0;                /* Remove upward shift */
+    margin-top: 0;         /* Remove extra top margin */
+    margin-bottom: 0;
+  }
+  .logo {
+    width: 32px;
+    top: 0;                /* Remove upward shift */
+    margin-bottom: 6px;
+    margin-top: 0;         /* Remove extra top margin */
+  }
+
+  /* Drops and feedback */
+  .drop {
+    width: 64px;
+    height: 64px;
+    font-size: 44px;
+  }
+  .feedback {
+    font-size: 26px;
+  }
+
+  /* Score/timer/lives text */
+  .score-panel {
+    font-size: 26px;
+  }
+  .timer,
+  .score {
+    font-size: 26px;
+  }
+  .lives {
+    font-size: 26px;
+  }
+
+  /* Milestone message */
+  .milestone-message {
+    font-size: 28px;
+    padding: 12px 0;
+  }
+  #milestone-container {
+    height: 44px;
+    min-height: 44px;
+  }
+
+  /* Start/end screen adjustments */
+  #start-btn,
+  .game-over-screen button {
+    font-size: 24px;
+    padding: 14px 32px;
+  }
+  .game-over-screen .final-score {
+    font-size: 28px;
+  }
+  .start-screen .game-title {
+    font-size: 44px;
+  }
+  .start-screen .logo {
+    width: 48px;
+  }
+  .start-screen .game-desc {
+    font-size: 22px;
+  }
+  
+}
+
+/* On larger screens, remove vertical centering to avoid excess space */
+@media (min-width: 700px) {
+  body {
+    justify-content: flex-start;
+    overflow: hidden; /* Ensure no scroll on large screens */
+  }
+
+  /* Vertically center start and end screens only */
+  .game-wrapper.centered-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+
+  #start-screen,
+  .game-over-screen {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
 }
