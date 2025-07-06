@@ -1,45 +1,193 @@
-// Variables to control game state
-let gameRunning = false; // Keeps track of whether game is active or not
-let dropMaker; // Will store our timer that creates drops regularly
+let score = 0;
+let timeLeft = 15;
+let lives = 3;
+let gameInterval;
+let dropInterval;
+let milestonesShown = new Set();
 
-// Wait for button click to start the game
-document.getElementById("start-btn").addEventListener("click", startGame);
+const scoreEl = document.getElementById("score");
+const timeEl = document.getElementById("time");
+const livesEl = document.getElementById("lives");
+const gameContainer = document.getElementById("game-container");
+const gameOverScreen = document.getElementById("game-over");
+const finalScoreEl = gameOverScreen.querySelector(".final-score");
+const restartBtn = document.getElementById("restart-btn");
+const gameOverMsg = gameOverScreen.querySelector("p:not(.final-score)");
+const startScreen = document.getElementById("start-screen");
+const mainGame = document.getElementById("main-game");
+const startBtn = document.getElementById("start-btn");
+
+const milestoneMessages = [
+  { score: 100, message: "You're helping more families!" },
+  { score: 200, message: "Amazing! Even more families helped!" },
+  { score: 300, message: "You’re a true Hydro Hero!" },
+  { score: 400, message: "Woah..." }
+];
+
+startBtn.addEventListener("click", () => {
+  startScreen.style.display = "none";
+  mainGame.style.display = "";
+  startGame();
+});
 
 function startGame() {
-  // Prevent multiple games from running at once
-  if (gameRunning) return;
+  resetGame();
+  // Hide Game Over screen if visible
+  gameOverScreen.style.display = "none";
+  mainGame.style.display = "";
+  gameContainer.style.display = "";
+  document.querySelector(".lives").style.display = "";
+  document.querySelector(".score-panel").style.display = "";
 
-  gameRunning = true;
-
-  // Create new drops every second (1000 milliseconds)
-  dropMaker = setInterval(createDrop, 1000);
+  gameInterval = setInterval(() => {
+    timeLeft--;
+    timeEl.textContent = timeLeft;
+    if (timeLeft <= 0 || lives <= 0) {
+      endGame();
+      return; // Stop further execution in this interval tick
+    }
+  }, 1000);
+  dropInterval = setInterval(spawnDrop, 400); // Change 800 to 500 for faster drops
 }
 
-function createDrop() {
-  // Create a new div element that will be our water drop
+function resetGame() {
+  score = 0;
+  timeLeft = 15;
+  lives = 3;
+  scoreEl.textContent = score;
+  timeEl.textContent = timeLeft;
+  livesEl.textContent = "❤️❤️❤️";
+  gameContainer.innerHTML = "";
+  milestonesShown.clear();
+}
+
+function spawnDrop() {
   const drop = document.createElement("div");
-  drop.className = "water-drop";
+  drop.classList.add("drop");
 
-  // Make drops different sizes for visual variety
-  const initialSize = 60;
-  const sizeMultiplier = Math.random() * 0.8 + 0.5;
-  const size = initialSize * sizeMultiplier;
-  drop.style.width = drop.style.height = `${size}px`;
+  const rand = Math.random();
+  if (rand < 0.6) {
+    drop.textContent = "💧";
+    drop.dataset.points = "10";
+  } else if (rand < 0.85) {
+    drop.textContent = "🟡";
+    drop.dataset.points = "20";
+  } else {
+    drop.textContent = "⚫";
+    drop.dataset.bad = "true";
+  }
 
-  // Position the drop randomly across the game width
-  // Subtract 60 pixels to keep drops fully inside the container
-  const gameWidth = document.getElementById("game-container").offsetWidth;
-  const xPosition = Math.random() * (gameWidth - 60);
-  drop.style.left = xPosition + "px";
+  drop.style.left = Math.random() * 260 + "px";
 
-  // Make drops fall for 4 seconds
-  drop.style.animationDuration = "4s";
-
-  // Add the new drop to the game screen
-  document.getElementById("game-container").appendChild(drop);
-
-  // Remove drops that reach the bottom (weren't clicked)
-  drop.addEventListener("animationend", () => {
-    drop.remove(); // Clean up drops that weren't caught
+  drop.addEventListener("click", (e) => {
+    // Show correct feedback above the drop
+    if (drop.dataset.bad) {
+      lives--;
+      livesEl.textContent = "❤️".repeat(lives);
+      showFeedback(drop, "-1 ❤️", e);
+      if (lives <= 0) {
+        endGame();
+        return; // Stop further execution if lives are exhausted
+      }
+    } else {
+      score += parseInt(drop.dataset.points);
+      scoreEl.textContent = score;
+      showFeedback(drop, "+" + drop.dataset.points, e);
+      checkMilestones();
+    }
+    drop.remove();
   });
+
+  drop.addEventListener("animationend", () => drop.remove());
+  gameContainer.appendChild(drop);
 }
+
+function showFeedback(drop, text, event) {
+  const fb = document.createElement("div");
+  fb.className = "feedback";
+  fb.textContent = text;
+
+  // Calculate position relative to gameContainer
+  let dropRect = drop.getBoundingClientRect();
+  let containerRect = gameContainer.getBoundingClientRect();
+  let left = dropRect.left - containerRect.left;
+  let top = dropRect.top - containerRect.top;
+
+  // Position feedback above the drop
+  fb.style.left = `${left}px`;
+  fb.style.top = `${top - 30}px`;
+
+  gameContainer.appendChild(fb);
+  setTimeout(() => fb.remove(), 1000);
+}
+
+// Add this function after showFeedback
+function checkMilestones() {
+  for (const milestone of milestoneMessages) {
+    if (score >= milestone.score && !milestonesShown.has(milestone.score)) {
+      showMilestoneMessage(milestone.message);
+      milestonesShown.add(milestone.score);
+    }
+  }
+}
+
+function showMilestoneMessage(message) {
+  // Only one milestone message at a time
+  const milestoneContainer = document.getElementById("milestone-container");
+  if (document.getElementById("milestone-msg")) return;
+  const msg = document.createElement("div");
+  msg.id = "milestone-msg";
+  msg.className = "milestone-message";
+  msg.textContent = message;
+  milestoneContainer.appendChild(msg);
+  setTimeout(() => {
+    msg.remove();
+  }, 1500);
+}
+
+function endGame() {
+  clearInterval(gameInterval);
+  clearInterval(dropInterval);
+  // Hide game UI, show Game Over screen
+  gameContainer.style.display = "none";
+  mainGame.style.display = "none";
+  document.querySelector(".lives").style.display = "none";
+  document.querySelector(".score-panel").style.display = "none";
+
+  // Determine highest milestone reached
+  let milestoneMsg = "";
+  let highest = 0;
+  for (const milestone of milestoneMessages) {
+    if (score >= milestone.score && milestone.score > highest) {
+      milestoneMsg = milestone.message;
+      highest = milestone.score;
+    }
+  }
+
+  if (lives <= 0) {
+    finalScoreEl.textContent = "You ran out of lives :(";
+    if (milestoneMsg) {
+      gameOverMsg.textContent = milestoneMsg + " Try again to become a Hydro Hero!";
+    } else {
+      gameOverMsg.textContent = "Try again to become a Hydro Hero!";
+    }
+  } else {
+    finalScoreEl.textContent = "Final Score: " + score;
+    if (milestoneMsg) {
+      gameOverMsg.textContent = milestoneMsg + " Thank you for playing and supporting clean water!";
+    } else {
+      gameOverMsg.textContent = "Thank you for playing and supporting clean water!";
+    }
+  }
+  gameOverScreen.style.display = "flex";
+}
+
+// Restart button handler
+restartBtn.addEventListener("click", () => {
+  gameOverScreen.style.display = "none";
+  mainGame.style.display = "";
+  gameContainer.style.display = "";
+  document.querySelector(".lives").style.display = "";
+  document.querySelector(".score-panel").style.display = "";
+  startGame();
+});
