@@ -17,6 +17,7 @@ const startScreen = document.getElementById("start-screen");
 const mainGame = document.getElementById("main-game");
 const startBtn = document.getElementById("start-btn");
 const gameWrapper = document.querySelector('.game-wrapper');
+const resetBtn = document.getElementById("reset-btn");
 
 const milestoneMessages = [
   { score: 100, message: "You're helping more families!" },
@@ -68,15 +69,20 @@ function spawnDrop() {
   const drop = document.createElement("div");
   drop.classList.add("drop");
 
+  // Prevent drag events on drops
+  drop.draggable = false;
+  drop.addEventListener('dragstart', e => e.preventDefault());
+
   const rand = Math.random();
   if (rand < 0.6) {
-    drop.textContent = "💧";
+    drop.innerHTML = '<img src="img/clean_drop.png" alt="Clean Drop" style="width:100%;height:100%;">';
     drop.dataset.points = "10";
   } else if (rand < 0.85) {
-    drop.textContent = "🟡";
+    drop.innerHTML = '<img src="img/water-can-transparent.png" alt="Water Can" style="width:100%;height:100%;">';
     drop.dataset.points = "20";
   } else {
-    drop.textContent = "⚫";
+    // Make contaminated drop slightly smaller
+    drop.innerHTML = '<img src="img/contaminated_drop.png" alt="Contaminated Drop" style="width:85%;height:85%;display:block;margin:auto;">';
     drop.dataset.bad = "true";
   }
 
@@ -171,6 +177,11 @@ function endGame() {
     }
   }
 
+  // Call showConfetti if score is 100 or more
+  if (score >= 100 && lives > 0 && typeof showConfetti === "function") {
+    showConfetti();
+  }
+
   if (lives <= 0) {
     finalScoreEl.textContent = "You ran out of lives :(";
     if (milestoneMsg) {
@@ -198,6 +209,14 @@ restartBtn.addEventListener("click", () => {
   document.querySelector(".lives").style.display = "";
   document.querySelector(".score-panel").style.display = "";
   gameWrapper.classList.remove('centered-screen');
+  startGame();
+});
+
+// Reset button handler
+resetBtn.addEventListener("click", () => {
+  // End current game and start a new one
+  clearInterval(gameInterval);
+  clearInterval(dropInterval);
   startGame();
 });
 

@@ -9,7 +9,7 @@
 <body>
   <div class="game-wrapper">
     <div id="start-screen" class="start-screen">
-      <img src="https://www.charitywater.org/favicon.ico" class="logo" alt="charity: water logo" />
+      <img src="img/cw_logo.png" class="logo" alt="charity: water logo" />
       <h1 class="game-title">Hydro Hero</h1>
       <p class="game-desc">
         Catch as many 💧 and 🟡 drops as you can before time runs out!<br>
@@ -20,7 +20,7 @@
     </div>
     <div id="main-game" style="display:none;">
       <h1 class="game-title">Hydro Hero</h1>
-      <img src="https://www.charitywater.org/favicon.ico" class="logo" alt="charity: water logo" />
+      <img src="img/cw_logo.png" class="logo" alt="charity: water logo" />
       <div id="milestone-container"></div>
       <div class="score-panel">
         <div class="timer">⏱ Timer: <span id="time">15</span>s</div>
@@ -28,15 +28,39 @@
       </div>
       <div id="game-container"></div>
       <div class="lives">Lives: <span id="lives">❤️❤️❤️</span></div>
+      <button id="reset-btn" type="button" style="margin-top:16px;">Reset</button>
     </div>
     <div id="game-over" class="game-over-screen" style="display:none;">
-      <img src="https://www.charitywater.org/favicon.ico" class="logo" alt="charity: water logo" />
+      <img src="img/cw_logo.png" class="logo" alt="charity: water logo" />
       <h2>Game Over!</h2>
       <p class="final-score"></p>
       <p></p>
       <button id="restart-btn">Restart</button>
     </div>
   </div>
+  <div id="confetti-canvas" style="pointer-events:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999;display:none;"></div>
   <script src="script.js"></script>
+  <script>
+    // Simple confetti burst using canvas-confetti CDN (optional, or use your own)
+    function showConfetti() {
+      const canvas = document.getElementById('confetti-canvas');
+      canvas.style.display = 'block';
+      if (window.confetti) {
+        window.confetti({
+          particleCount: 120,
+          spread: 90,
+          origin: { y: 0.6 }
+        });
+      }
+      setTimeout(() => { canvas.style.display = 'none'; }, 2000);
+    }
+    // Load canvas-confetti if not present
+    if (!window.confetti) {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js';
+      s.onload = () => { window.confetti = window.confetti || confetti; };
+      document.head.appendChild(s);
+    }
+  </script>
 </body>
 </html>
