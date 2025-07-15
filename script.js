@@ -3,7 +3,40 @@ let timeLeft = 15;
 let lives = 3;
 let gameInterval;
 let dropInterval;
+let contaminatedInterval;
 let milestonesShown = new Set();
+let currentDifficulty = 'normal';
+
+// Difficulty settings
+const difficultySettings = {
+  easy: {
+    time: 20,
+    dropSpeed: 500,
+    cleanDropChance: 0.7,
+    canDropChance: 0.2,
+    contaminatedChance: 0.1,
+    contaminatedSpawnRate: 3000,
+    lives: 3
+  },
+  normal: {
+    time: 15,
+    dropSpeed: 400,
+    cleanDropChance: 0.6,
+    canDropChance: 0.25,
+    contaminatedChance: 0.15,
+    contaminatedSpawnRate: 2500,
+    lives: 3
+  },
+  hard: {
+    time: 12,
+    dropSpeed: 300,
+    cleanDropChance: 0.45,
+    canDropChance: 0.25,
+    contaminatedChance: 0.3,
+    contaminatedSpawnRate: 2000,
+    lives: 1
+  }
+};
 
 const scoreEl = document.getElementById("score");
 const timeEl = document.getElementById("time");
@@ -14,23 +47,65 @@ const finalScoreEl = gameOverScreen.querySelector(".final-score");
 const restartBtn = document.getElementById("restart-btn");
 const gameOverMsg = gameOverScreen.querySelector("p:not(.final-score)");
 const startScreen = document.getElementById("start-screen");
+const difficultyScreen = document.getElementById("difficulty-screen");
 const mainGame = document.getElementById("main-game");
-const startBtn = document.getElementById("start-btn");
+const chooseDifficultyBtn = document.getElementById("choose-difficulty-btn");
+const backBtn = document.getElementById("back-btn");
 const gameWrapper = document.querySelector('.game-wrapper');
 const resetBtn = document.getElementById("reset-btn");
 
 const milestoneMessages = [
   { score: 100, message: "You're helping more families!" },
   { score: 200, message: "Amazing! Even more families helped!" },
-  { score: 300, message: "You’re a true Hydro Hero!" },
+  { score: 300, message: "You're a true Hydro Hero!" },
   { score: 400, message: "Woah..." }
 ];
 
-startBtn.addEventListener("click", () => {
-  startScreen.style.display = "none";
-  mainGame.style.display = "";
-  gameWrapper.classList.remove('centered-screen');
-  startGame();
+// Wait for DOM to be fully loaded before adding event listeners
+document.addEventListener('DOMContentLoaded', () => {
+  chooseDifficultyBtn.addEventListener("click", () => {
+    startScreen.style.display = "none";
+    difficultyScreen.style.display = "flex";
+  });
+
+  backBtn.addEventListener("click", () => {
+    difficultyScreen.style.display = "none";
+    startScreen.style.display = "flex";
+  });
+
+  // Add event listeners for difficulty buttons
+  document.querySelectorAll('.difficulty-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      // Get the button element, not just the event target
+      const button = e.currentTarget;
+      currentDifficulty = button.dataset.difficulty;
+      console.log('Button clicked, difficulty set to:', currentDifficulty);
+      difficultyScreen.style.display = "none";
+      mainGame.style.display = "";
+      gameWrapper.classList.remove('centered-screen');
+      startGame();
+    });
+  });
+
+  // Restart button handler
+  restartBtn.addEventListener("click", () => {
+    gameOverScreen.style.display = "none";
+    difficultyScreen.style.display = "flex";
+    gameWrapper.classList.add('centered-screen');
+  });
+
+  // Reset button handler
+  resetBtn.addEventListener("click", () => {
+    // End current game and start a new one
+    clearInterval(gameInterval);
+    clearInterval(dropInterval);
+    startGame();
+  });
+
+  // On initial load, center the start screen
+  if (startScreen.style.display !== "none") {
+    gameWrapper.classList.add('centered-screen');
+  }
 });
 
 function startGame() {
@@ -42,6 +117,18 @@ function startGame() {
   document.querySelector(".lives").style.display = "";
   document.querySelector(".score-panel").style.display = "";
 
+  // Add difficulty-specific styling
+  gameContainer.className = "";
+  if (currentDifficulty === 'easy') {
+    gameContainer.classList.add('village-well');
+  }
+
+  // Set time based on difficulty
+  const settings = difficultySettings[currentDifficulty];
+  console.log('Starting game with difficulty:', currentDifficulty, 'settings:', settings);
+  timeLeft = settings.time;
+  timeEl.textContent = timeLeft;
+
   gameInterval = setInterval(() => {
     timeLeft--;
     timeEl.textContent = timeLeft;
@@ -50,17 +137,22 @@ function startGame() {
       return; // Stop further execution in this interval tick
     }
   }, 1000);
-  dropInterval = setInterval(spawnDrop, 400); // Change 800 to 500 for faster drops
+  dropInterval = setInterval(spawnDrop, settings.dropSpeed);
+  contaminatedInterval = setInterval(spawnContaminatedDrop, settings.contaminatedSpawnRate);
   gameWrapper.classList.remove('centered-screen');
 }
 
 function resetGame() {
+  clearInterval(gameInterval);
+  clearInterval(dropInterval);
+  clearInterval(contaminatedInterval);
   score = 0;
-  timeLeft = 15;
-  lives = 3;
+  const settings = difficultySettings[currentDifficulty];
+  timeLeft = settings.time;
+  lives = settings.lives;
   scoreEl.textContent = score;
   timeEl.textContent = timeLeft;
-  livesEl.textContent = "❤️❤️❤️";
+  livesEl.textContent = "❤️".repeat(lives);
   gameContainer.innerHTML = "";
   milestonesShown.clear();
 }
@@ -73,11 +165,13 @@ function spawnDrop() {
   drop.draggable = false;
   drop.addEventListener('dragstart', e => e.preventDefault());
 
+  const settings = difficultySettings[currentDifficulty];
   const rand = Math.random();
-  if (rand < 0.6) {
+  
+  if (rand < settings.cleanDropChance) {
     drop.innerHTML = '<img src="img/clean_drop.png" alt="Clean Drop" style="width:100%;height:100%;">';
     drop.dataset.points = "10";
-  } else if (rand < 0.85) {
+  } else if (rand < settings.cleanDropChance + settings.canDropChance) {
     drop.innerHTML = '<img src="img/water-can-transparent.png" alt="Water Can" style="width:100%;height:100%;">';
     drop.dataset.points = "20";
   } else {
@@ -88,7 +182,7 @@ function spawnDrop() {
 
   // Responsive spawn: wider range on large screens
   let containerWidth = gameContainer.offsetWidth;
-  let dropWidth = window.matchMedia('(min-width: 700px)').matches ? 64 : 40;
+  let dropWidth = window.matchMedia('(min-width: 700px)').matches ? 70 : 40;
   let maxLeft = containerWidth - dropWidth;
   drop.style.left = Math.random() * maxLeft + "px";
 
@@ -107,6 +201,39 @@ function spawnDrop() {
       scoreEl.textContent = score;
       showFeedback(drop, "+" + drop.dataset.points, e);
       checkMilestones();
+    }
+    drop.remove();
+  });
+
+  drop.addEventListener("animationend", () => drop.remove());
+  gameContainer.appendChild(drop);
+}
+
+function spawnContaminatedDrop() {
+  const drop = document.createElement("div");
+  drop.classList.add("drop");
+
+  // Prevent drag events on drops
+  drop.draggable = false;
+  drop.addEventListener('dragstart', e => e.preventDefault());
+
+  // Always spawn contaminated drop
+  drop.innerHTML = '<img src="img/contaminated_drop.png" alt="Contaminated Drop" style="width:85%;height:85%;display:block;margin:auto;">';
+  drop.dataset.bad = "true";
+
+  // Responsive spawn: wider range on large screens
+  let containerWidth = gameContainer.offsetWidth;
+  let dropWidth = window.matchMedia('(min-width: 700px)').matches ? 70 : 40;
+  let maxLeft = containerWidth - dropWidth;
+  drop.style.left = Math.random() * maxLeft + "px";
+
+  drop.addEventListener("click", (e) => {
+    lives--;
+    livesEl.textContent = "❤️".repeat(lives);
+    showFeedback(drop, "-1 ❤️", e);
+    if (lives <= 0) {
+      endGame();
+      return;
     }
     drop.remove();
   });
@@ -161,6 +288,7 @@ function showMilestoneMessage(message) {
 function endGame() {
   clearInterval(gameInterval);
   clearInterval(dropInterval);
+  clearInterval(contaminatedInterval);
   // Hide game UI, show Game Over screen
   gameContainer.style.display = "none";
   mainGame.style.display = "none";
@@ -198,29 +326,5 @@ function endGame() {
     }
   }
   gameOverScreen.style.display = "flex";
-  gameWrapper.classList.add('centered-screen');
-}
-
-// Restart button handler
-restartBtn.addEventListener("click", () => {
-  gameOverScreen.style.display = "none";
-  mainGame.style.display = "";
-  gameContainer.style.display = "";
-  document.querySelector(".lives").style.display = "";
-  document.querySelector(".score-panel").style.display = "";
-  gameWrapper.classList.remove('centered-screen');
-  startGame();
-});
-
-// Reset button handler
-resetBtn.addEventListener("click", () => {
-  // End current game and start a new one
-  clearInterval(gameInterval);
-  clearInterval(dropInterval);
-  startGame();
-});
-
-// On initial load, center the start screen
-if (startScreen.style.display !== "none") {
   gameWrapper.classList.add('centered-screen');
 }

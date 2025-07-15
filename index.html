@@ -16,7 +16,26 @@
         Avoid the <img src="img/contaminated_drop.png" alt="Contaminated Drop" style="width:36px;height:36px;vertical-align:middle;"> drops or you'll lose a life.<br>
         Can you become a Hydro Hero and support clean water for all?
       </p>
-      <button id="start-btn">Start Game</button>
+      <button id="choose-difficulty-btn">Choose Mission</button>
+    </div>
+    <div id="difficulty-screen" class="start-screen" style="display:none;">
+      <img src="img/cw_logo.png" class="logo" alt="charity: water logo" />
+      <h1 class="game-title">Choose Your Mission</h1>
+      <div class="difficulty-options">
+        <button id="easy-btn" class="difficulty-btn" data-difficulty="easy">
+          <strong>Village Well</strong><br>
+          <small>Stable water source<br>20 seconds • More clean drops</small>
+        </button>
+        <button id="normal-btn" class="difficulty-btn" data-difficulty="normal">
+          <strong>Drought Season</strong><br>
+          <small>Water scarcity<br>15 seconds • Balanced drops</small>
+        </button>
+        <button id="hard-btn" class="difficulty-btn" data-difficulty="hard">
+          <strong>Emergency Relief</strong><br>
+          <small>Crisis conditions<br>12 seconds • 1 life • More contamination</small>
+        </button>
+      </div>
+      <button id="back-btn" class="back-btn">← Back</button>
     </div>
     <div id="main-game" style="display:none;">
       <h1 class="game-title">Hydro Hero</h1>
@@ -38,9 +57,60 @@
       <button id="restart-btn">Restart</button>
     </div>
   </div>
+  
+  <footer>
+    <a href="https://www.charitywater.org/" target="_blank" rel="noopener noreferrer">charity: water</a> | 
+    <a href="https://www.charitywater.org/donate/" target="_blank" rel="noopener noreferrer">Donate</a>
+  </footer>
+  
   <div id="confetti-canvas" style="pointer-events:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:999;display:none;"></div>
   <script src="script.js"></script>
   <script>
+    // Water-themed background animations
+    function createWaterRipple() {
+      const ripple = document.createElement('div');
+      ripple.className = 'water-ripple';
+      ripple.style.left = Math.random() * window.innerWidth + 'px';
+      ripple.style.top = Math.random() * window.innerHeight + 'px';
+      document.body.appendChild(ripple);
+      
+      setTimeout(() => {
+        ripple.remove();
+      }, 4000);
+    }
+
+    function createBubble() {
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      const size = Math.random() * 30 + 10; // 10-40px
+      bubble.style.width = size + 'px';
+      bubble.style.height = size + 'px';
+      bubble.style.left = Math.random() * window.innerWidth + 'px';
+      bubble.style.animationDuration = (Math.random() * 6 + 4) + 's'; // 4-10s
+      document.body.appendChild(bubble);
+      
+      setTimeout(() => {
+        bubble.remove();
+      }, 10000);
+    }
+
+    function createWaterDroplet() {
+      const droplet = document.createElement('div');
+      droplet.className = 'water-droplet-bg';
+      droplet.style.left = Math.random() * window.innerWidth + 'px';
+      droplet.style.animationDuration = (Math.random() * 3 + 2) + 's'; // 2-5s
+      document.body.appendChild(droplet);
+      
+      setTimeout(() => {
+        droplet.remove();
+      }, 5000);
+    }
+
+    // Start background animations
+    setInterval(createWaterRipple, 2000);
+    setInterval(createBubble, 1500);
+    setInterval(createWaterDroplet, 800);
+
     // Simple confetti burst using canvas-confetti CDN (optional, or use your own)
     function showConfetti() {
       const canvas = document.getElementById('confetti-canvas');
