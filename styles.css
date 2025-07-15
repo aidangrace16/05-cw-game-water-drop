@@ -1,6 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: 'Montserrat', Arial, sans-serif;
   background: linear-gradient(135deg, #e6f7ff 0%, #b3e5fc 25%, #81d4fa 50%, #4fc3f7 75%, #29b6f6 100%);
   background-size: 400% 400%;
   animation: gradientShift 8s ease-in-out infinite;
@@ -414,8 +416,13 @@ body,
 .start-screen .game-desc,
 .game-over-screen .final-score,
 .game-over-screen button,
-.game-over-screen p {
-  user-select: none;
+.game-over-screen p,
+footer,
+footer a,
+.difficulty-btn,
+.difficulty-btn strong,
+.difficulty-btn small {
+  font-family: 'Montserrat', Arial, sans-serif;
 }
 
 footer {
